@@ -41,6 +41,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+SoftI2C_HandleTypeDef hi2c;
 
 /* USER CODE BEGIN PV */
 
@@ -89,7 +90,32 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
+  
+  /* Initialize Software I2C */
+  hi2c.sda_port = GPIOA;
+  hi2c.sda_pin = GPIO_PIN_9;  /* Use PA9 for SDA */
+  hi2c.scl_port = GPIOA;
+  hi2c.scl_pin = GPIO_PIN_10; /* Use PA10 for SCL */
+  hi2c.delay_us = 10;         /* 10us delay for 100kHz I2C */
+  
+  SoftI2C_Init(&hi2c);
+  
+  /* Test I2C device detection */
+  uint8_t device_addr = 0x50; /* Example: EEPROM device address */
 
+  HAL_StatusTypeDef status = SoftI2C_IsDeviceReady(&hi2c, device_addr);
+  
+  if (status == HAL_OK)
+  {
+    /* Device found - toggle LED */
+    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_8);
+  }
+  else
+  {
+    /* Device not found - keep LED off */
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+  }
+ 
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -157,8 +183,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : PA8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  /*Configure GPIO pins : PA8 PA9 PA10 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
